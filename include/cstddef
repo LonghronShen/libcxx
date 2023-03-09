@@ -50,7 +50,11 @@ using ::ptrdiff_t;
 using ::size_t;
 
 #if !defined(_LIBCPP_CXX03_LANG)
+#if defined(_MSC_VER) && !defined(max_align_t)
+using max_align_t = double;
+#else
 using ::max_align_t;
+#endif
 #endif
 
 template <class _Tp> struct __libcpp_is_integral                     { enum { value = 0 }; };
