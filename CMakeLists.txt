@@ -1,7 +1,36 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
+
+set(CMAKE_MODULE_PATH
+    ${CMAKE_MODULE_PATH}
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(project_name "libcxx")
 project(${project_name} C CXX)
+
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    # Support Unix Makefiles and Ninja
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+endif()
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin CACHE STRING "CMAKE_LIBRARY_OUTPUT_DIRECTORY" FORCE)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin CACHE STRING "CMAKE_RUNTIME_OUTPUT_DIRECTORY" FORCE)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin CACHE STRING "CMAKE_ARCHIVE_OUTPUT_DIRECTORY" FORCE)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin CACHE STRING "CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG" FORCE)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin CACHE STRING "CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG" FORCE)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(CMAKE_MACOSX_RPATH 1 CACHE STRING "CMAKE_MACOSX_RPATH" FORCE)
+set(CMAKE_CXX_STANDARD 20 CACHE STRING "Set to 11 or 14 to enable C++11 or C++17 builds, respectively." FORCE)
+set(CMAKE_C_STANDARD 17 CACHE STRING "Set to 99 or 11 to enable C99 or C11 builds, respectively." FORCE)
+set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(GLOBAL PROPERTY C_STANDARD_REQUIRED ON)
+
+include(DetectClang)
+
+include(external/InitializeExternalComponents.cmake)
 
 # TODO: make all things compile or just do some conditional compilation.
 # file(GLOB_RECURSE src
@@ -54,7 +83,7 @@ add_library(${project_name}
     STATIC ${src}
 )
 
-if(WIN32)
+if(WIN32 OR MINGW)
     target_link_libraries(${project_name}
         PUBLIC "winpthreads"
     )
@@ -80,4 +109,14 @@ if(CMAKE_CXX_IS_CLANG_WIN)
     target_compile_options(${project_name}
         PRIVATE "-march=pentium-mmx"
     )
+
+    if(CMAKE_CXX_IS_CLANG_CL)
+        target_link_options(${project_name}
+            PRIVATE "/nodefaultlib:libc++"
+        )
+    elseif(CMAKE_CXX_IS_CLANG_CL_GNU)
+        target_link_options(${project_name}
+            PRIVATE "-nostdlib++"
+        )
+    endif()
 endif()
