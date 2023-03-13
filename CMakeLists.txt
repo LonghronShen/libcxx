@@ -112,11 +112,11 @@ if(CMAKE_CXX_IS_CLANG_WIN)
 
     if(CMAKE_CXX_IS_CLANG_CL)
         target_link_options(${project_name}
-            PRIVATE "/nodefaultlib:libc++"
+            PUBLIC "/nodefaultlib:libc++"
         )
     elseif(CMAKE_CXX_IS_CLANG_CL_GNU)
         target_link_options(${project_name}
-            PRIVATE "-nostdlib++"
+            PUBLIC "-nostdlib++"
         )
     endif()
 endif()
